@@ -20,4 +20,4 @@ spring:
 
 server:
   tomcat:
-    max-http-form-post-size: 542800 #~50MB
+    max-http-form-post-size: 104857600  # 100MB

@@ -1,16 +1,13 @@
 package com.example.moldMaker.service;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.example.moldMaker.exception.NotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 @Service
 public class StlService {
+    /*
     public Path processStlFile(MultipartFile uploadedFile) throws IOException {
         // 1) 파일 임시 저장
         Path tempFilePath = Files.createTempFile("temp-stl-", ".stl");
@@ -24,5 +21,17 @@ public class StlService {
         //    변환된 파일 또는 결과물을 저장 후 경로/식별자 반환
 
         return tempFilePath.toAbsolutePath();
+    }*/
+    public byte[] processStlFile(byte[] stlFile) throws IOException, NotFoundException {
+        if (stlFile == null || stlFile.length == 0) {
+            throw new NotFoundException("Empty stl data");
+        }
+        // 1) 파일 임시 저장
+        // 2) STL 파일 변환
+        // 3) 변환 결과 저장
+
+        byte[] convertedStlData = stlFile;
+
+        return convertedStlData;
     }
 }
