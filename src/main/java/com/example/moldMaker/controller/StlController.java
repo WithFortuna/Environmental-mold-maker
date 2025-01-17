@@ -1,5 +1,6 @@
 package com.example.moldMaker.controller;
 
+import com.example.moldMaker.constants.PathConstants;
 import com.example.moldMaker.service.StlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,9 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-
+import java.util.HashMap;
+import java.util.Map;
 /*
-* Http 컨텐츠 타입:
+* Http content-type:
 * 파일 수신: multipart/form-data => model/stl
 * 파일 송신: application/octet-stream => model/stl
 *
@@ -24,19 +26,62 @@ public class StlController {
     private final StlService stlService;
 
 
-    //1-2 model/stl 타입으로 수신
+    /*
+    * model/stl 타입으로 송신 및 수신
+    * (.stl파일, .txt)파일 경로 반환
+    * */
     @PostMapping(
             value = "/upload",
             consumes = "model/stl", //수신 type
             produces = "model/stl"  //송신 type
 
     )
-    public ResponseEntity<ByteArrayResource> handleStlFile(@RequestBody byte[] uploadedFile) {
+    public ResponseEntity<Map<String,String >> handleStlFile2(@RequestBody byte[] uploadedFile) {
 
         try {
-            // 2) 저장/변환 로직 호출
+            // 1. 변환 로직 호출
             byte[] convertedFile = stlService.processStlFile(uploadedFile);
-            ByteArrayResource resource = new ByteArrayResource(convertedFile);
+            // 2. output파일 저장
+            stlService.saveOutputFile(convertedFile);
+
+            //교체 파일들 삭제
+            stlService.deleteOutputStlFile();
+            stlService.deleteInputFile();
+
+
+            Map<String, String> response = new HashMap<>();
+            response.put("path", PathConstants.RESULT_FOLDER_PATH);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(response);
+        } catch (IOException e) {
+            // 예외 처리
+            log.error("I/O eroor occured ", e);
+            return ResponseEntity.notFound().build();                                       //404 not found 던짐
+        }
+    }
+
+
+
+
+
+    @PostMapping(
+            value = "/upload/test",
+            consumes = "model/stl", //수신 type
+            produces = "model/stl"  //송신 type
+
+    )
+    public ResponseEntity<ByteArrayResource> testfunc(@RequestBody byte[] uploadedFile) throws IOException {
+
+
+            // 2) 저장/변환 로직 호출
+//            byte[] convertedFile = stlService.processStlFile(uploadedFile);
+            ByteArrayResource resource = new ByteArrayResource(uploadedFile);
+            stlService.processStlFile(uploadedFile);
+
+            //교체 파일들 삭제
+            stlService.deleteOutputStlFile();
+            stlService.deleteInputFile();
 
             String fileName = resource.getFilename();
             String contentType = "model/stl";
@@ -46,12 +91,18 @@ public class StlController {
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(resource);
 
-        } catch (IOException e) {
-            // 예외 처리
-            log.error("I/O eroor occured ", e);
-            return ResponseEntity.notFound().build();                                       //404 not found 던짐
-        }
+
     }
+
+
+
+
+
+
+
+
+
+
 
 
     //ver1: 파일 수신 및 송신 결합
@@ -116,6 +167,43 @@ public class StlController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing STL file");
         } catch (NotFoundException e) {
             log.error("Error occured. Processing file is finished but error occured when fetch convertedFile, 파일위치: {}", e.getMessage(), e);
+        }
+    }
+*/
+
+
+    /*
+
+
+    //1-2 model/stl 타입으로 수신 & .stl파일 반환
+    @PostMapping(
+            value = "/upload/v1",
+            consumes = "model/stl", //수신 type
+            produces = "model/stl"  //송신 type
+
+    )
+    public ResponseEntity<ByteArrayResource> handleStlFile1(@RequestBody byte[] uploadedFile) {
+
+        try {
+            // 2) 저장/변환 로직 호출
+            byte[] convertedFile = stlService.processStlFile(uploadedFile);
+            ByteArrayResource resource = new ByteArrayResource(convertedFile);
+
+            String fileName = resource.getFilename();
+            //교체 파일들 삭제
+            stlService.deleteOutputStlFile();
+            stlService.deleteInputFile();
+
+            String contentType = "model/stl";
+            // 3) 변환stl파일 전송
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(resource);
+
+        } catch (IOException e) {
+            // 예외 처리
+            log.error("I/O error occured ", e);
+            return ResponseEntity.notFound().build();                                       //404 not found 던짐
         }
     }
 */
