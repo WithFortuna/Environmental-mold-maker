@@ -12,16 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-/*작업목록*/
-
-/*
-*
-
-//if float이면 => 반환 128.93796829118364
-//else error
-
-
-* */
 
 @Slf4j
 @Service
@@ -45,14 +35,11 @@ public class StlService {
 
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-//            StringBuilder pyResult = new StringBuilder();
 
             String line;
-//            System.out.println("-------------------------------");
             boolean volumeFlag = false;
             float volume = 0.0f;
             while ((line = reader.readLine()) != null) {
-//                pyResult.append(line).append('\n');  //'\n'추가해야하는가
                 System.out.println(line); // Print the output from the Python script
                 try {
                     volume = Float.parseFloat(line.trim());
