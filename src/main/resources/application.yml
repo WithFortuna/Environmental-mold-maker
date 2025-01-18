@@ -8,7 +8,7 @@ spring:
     url: jdbc:mysql://localhost:3306/mold_maker
     username: root
     password: 1111
-    
+
   jpa:
     hibernate:
       ddl-auto: create

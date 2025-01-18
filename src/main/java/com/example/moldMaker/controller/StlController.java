@@ -1,15 +1,20 @@
 package com.example.moldMaker.controller;
 
 import com.example.moldMaker.constants.PathConstants;
+import com.example.moldMaker.exception.NotFoundException;
 import com.example.moldMaker.service.StlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 /*
@@ -20,11 +25,15 @@ import java.util.Map;
 * */
 
 @Slf4j
-@RequiredArgsConstructor
 @RestController
+@RequestMapping("/api")
 public class StlController {
+
     private final StlService stlService;
 
+    public StlController(StlService stlService) {
+        this.stlService = stlService;
+    }
 
     /*
     * model/stl 타입으로 송신 및 수신
@@ -33,31 +42,33 @@ public class StlController {
     @PostMapping(
             value = "/upload",
             consumes = "model/stl", //수신 type
-            produces = "model/stl"  //송신 type
-
+            produces = "application/json"   //송신 type
     )
-    public ResponseEntity<Map<String,String >> handleStlFile2(@RequestBody byte[] uploadedFile) {
-
+    public ResponseEntity<Map<String, Object>> handleStlFile(@RequestBody byte[] uploadedFile) {
         try {
             // 1. 변환 로직 호출
-            byte[] convertedFile = stlService.processStlFile(uploadedFile);
+            StlService.StlProcessingResult result = stlService.processStlFile(uploadedFile);
+/*
             // 2. output파일 저장
             stlService.saveOutputFile(convertedFile);
+*/
+
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("fileContent", Base64.getEncoder().encodeToString(result.getConvertedFile())); // Base64 encoded file
+            response.put("volume", result.getVolume()); // Volume included directly
 
             //교체 파일들 삭제
             stlService.deleteOutputStlFile();
             stlService.deleteInputFile();
 
 
-            Map<String, String> response = new HashMap<>();
-            response.put("path", PathConstants.RESULT_FOLDER_PATH);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(response);
-        } catch (IOException e) {
+            return ResponseEntity.ok(response);
+        } catch (IOException | NotFoundException e) {
             // 예외 처리
             log.error("I/O eroor occured ", e);
-            return ResponseEntity.notFound().build();                                       //404 not found 던짐
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "File processing error"));
         }
     }
 
